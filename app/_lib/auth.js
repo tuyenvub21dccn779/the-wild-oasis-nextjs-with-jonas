@@ -1,8 +1,15 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { createGuest, getGuest } from "./data-service";
+import authConfig from "./auth.config";
 
-const authConfig = {
+export const {
+  auth,
+  signIn,
+  signOut,
+  handlers: { GET, POST },
+} = NextAuth({
+  ...authConfig,
   providers: [
     GoogleProvider({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -10,35 +17,21 @@ const authConfig = {
     }),
   ],
   callbacks: {
-    authorized({ auth, request }) {
-      return !!auth?.user;
-    },
-    async signIn({ user, account, profile }) {
+    ...authConfig.callbacks,
+    async signIn({ user }) {
       try {
         const existingGuest = await getGuest(user.email);
-
         if (!existingGuest)
           await createGuest({ email: user.email, fullName: user.name });
-
         return true;
       } catch {
         return false;
       }
     },
-    async session({ session, user }) {
+    async session({ session }) {
       const guest = await getGuest(session.user.email);
       session.user.guestId = guest.id;
       return session;
     },
   },
-  pages: {
-    signIn: "/login",
-  },
-};
-
-export const {
-  auth,
-  signIn,
-  signOut,
-  handlers: { GET, POST },
-} = NextAuth(authConfig);
+});
