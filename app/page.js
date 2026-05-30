@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <main className="mt-24">
       <Image
-        className="object-cover object-top"
+        className="object-cover object-center"
         src={bg}
         placeholder="blur"
         quality={80}
